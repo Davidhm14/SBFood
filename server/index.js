@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-
+const authRoutes = require('./routes/auth');
 const { sequelize, User, Table, Category, Product } = require('./models');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
