@@ -1,13 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-const sequelize = new Sequelize('sb_food_db', 'sb_food_user', 'SbFood2025!', {
-  host: 'localhost',
-  dialect: 'postgres',
-  logging: false,
-});
-
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    logging: false,
+  }
+);
 const app = express();
 app.use(cors());
 app.use(express.json());
