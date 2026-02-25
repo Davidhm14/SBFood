@@ -5,6 +5,11 @@ require('dotenv').config();
 const { sequelize, User, Table, Category, Product } = require('./models');
 const authRoutes  = require('./routes/auth');
 const tableRoutes = require('./routes/tables');
+const orderRoutes = require('./routes/orders');
+const productRoutes = require('./routes/products');
+
+
+
 
 const app = express();
 
@@ -15,6 +20,8 @@ app.use(express.json());
 // ─── Rutas ──────────────────────────────────────────────────
 app.use('/api/auth',   authRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes);
 
 // ─── Health & Test ───────────────────────────────────────────
 app.get('/health', (req, res) => {

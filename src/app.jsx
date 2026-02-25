@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Activation from './pages/Activation';
 import Login      from './pages/Login';
-import Tables from './pages/tables';
+import Tables     from './pages/tables';
+import OrderPanel from './pages/OrderPanel';
 
 function Dashboard() {
   const { user, logout } = useAuth();
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [refreshTables, setRefreshTables] = useState(0);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
@@ -35,12 +38,27 @@ function Dashboard() {
       {/* Contenido */}
       <main className="p-8 max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold text-white mb-6">🪑 Mesas del restaurante</h2>
-        <Tables onSelectTable={(table) => console.log('Mesa seleccionada:', table)} />
+        <Tables
+          key={refreshTables}
+          onSelectTable={setSelectedTable}
+        />
       </main>
+
+      {/* Panel de comanda */}
+      {selectedTable && (
+        <OrderPanel
+          table={selectedTable}
+          onClose={() => setSelectedTable(null)}
+          onOrderUpdate={() => setRefreshTables(r => r + 1)}
+          onOrderClosed={() => {
+            setRefreshTables(r => r + 1);
+            setSelectedTable(null);
+          }}
+        />
+      )}
     </div>
   );
 }
-
 
 function AppContent() {
   const { isAuth } = useAuth();
