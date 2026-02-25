@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  // APIs futuras aquí
+  checkLicense:   ()       => ipcRenderer.invoke('license:check'),
+  activateLicense: (serial) => ipcRenderer.invoke('license:activate', serial),
 });
