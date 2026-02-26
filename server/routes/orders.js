@@ -1,4 +1,5 @@
 const express = require('express');
+const { Op } = require('sequelize');
 const { Order, OrderItem, Product, Table } = require('../models');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -8,7 +9,7 @@ const router = express.Router();
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const orders = await Order.findAll({
-      where: { status: ['open', 'in_progress'] },
+      where: { status: { [Op.in]: ['open', 'pending_payment'] } },
       include: [
         { model: Table,     attributes: ['id', 'name'] },
         { model: OrderItem, include: [{ model: Product, attributes: ['id', 'name', 'price'] }] },
@@ -25,7 +26,7 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/table/:tableId', authMiddleware, async (req, res) => {
   try {
     const order = await Order.findOne({
-      where: { table_id: req.params.tableId, status: ['open'] },
+      where: { table_id: req.params.tableId, status: { [Op.in]: ['open'] } },
       include: [
         { model: Table,     attributes: ['id', 'name'] },
         { model: OrderItem, include: [{ model: Product, attributes: ['id', 'name', 'price'] }] },
@@ -41,9 +42,7 @@ router.get('/table/:tableId', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { tableId, notes } = req.body;
-
     await Table.update({ status: 'occupied' }, { where: { id: tableId } });
-
     const order = await Order.create({
       table_id: tableId,
       user_id:  req.user.id,
@@ -51,14 +50,12 @@ router.post('/', authMiddleware, async (req, res) => {
       notes:    notes || '',
       total:    0,
     });
-
     const full = await Order.findByPk(order.id, {
       include: [
         { model: Table,     attributes: ['id', 'name'] },
         { model: OrderItem, include: [{ model: Product, attributes: ['id', 'name', 'price'] }] },
       ],
     });
-
     res.status(201).json(full);
   } catch (error) {
     res.status(500).json({ message: 'Error al crear comanda', error: error.message });
@@ -100,7 +97,6 @@ router.post('/:id/items', authMiddleware, async (req, res) => {
         { model: OrderItem, include: [{ model: Product, attributes: ['id', 'name', 'price'] }] },
       ],
     });
-
     res.json(full);
   } catch (error) {
     res.status(500).json({ message: 'Error al agregar item', error: error.message });
@@ -122,6 +118,44 @@ router.delete('/:id/items/:itemId', authMiddleware, async (req, res) => {
     res.json({ message: 'Item eliminado', total });
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar item', error: error.message });
+  }
+});
+
+// PATCH /api/orders/:id/send-to-cash — enviar a caja
+router.patch('/:id/send-to-cash', authMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findByPk(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Comanda no encontrada' });
+    if (order.status !== 'open')
+      return res.status(400).json({ message: 'La comanda no está abierta' });
+
+    await order.update({ status: 'pending_payment' });
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al enviar a caja', error: error.message });
+  }
+});
+
+// PATCH /api/orders/:id/checkout — cobrar con medio de pago
+router.patch('/:id/checkout', authMiddleware, async (req, res) => {
+  try {
+    const { paymentMethod } = req.body;
+    const order = await Order.findByPk(req.params.id, {
+      include: [
+        { model: Table,     attributes: ['id', 'name'] },
+        { model: OrderItem, include: [{ model: Product, attributes: ['id', 'name', 'price'] }] },
+      ],
+    });
+    if (!order) return res.status(404).json({ message: 'Comanda no encontrada' });
+    if (order.status !== 'pending_payment')
+      return res.status(400).json({ message: 'La comanda no está pendiente de pago' });
+
+    await order.update({ status: 'paid', payment_method: paymentMethod });
+    await Table.update({ status: 'free' }, { where: { id: order.table_id } });
+
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al cobrar', error: error.message });
   }
 });
 

@@ -3,11 +3,11 @@ import { useApi } from '../hooks/useApi';
 
 export default function OrderPanel({ table, onClose, onOrderUpdate, onOrderClosed }) {
   const api = useApi();
-  const [order, setOrder]           = useState(null);
-  const [products, setProducts]     = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [order, setOrder]                   = useState(null);
+  const [products, setProducts]             = useState([]);
+  const [categories, setCategories]         = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]               = useState(true);
 
   useEffect(() => { loadData(); }, [table]);
 
@@ -36,7 +36,7 @@ export default function OrderPanel({ table, onClose, onOrderUpdate, onOrderClose
     const newOrder = await api.post('/orders', { tableId: table.id });
     if (newOrder?.id) {
       setOrder(newOrder);
-      onOrderUpdate?.(); // solo refresca mesas, no cierra
+      onOrderUpdate?.();
     }
   }
 
@@ -48,7 +48,7 @@ export default function OrderPanel({ table, onClose, onOrderUpdate, onOrderClose
     });
     if (updated?.id) {
       setOrder(updated);
-      onOrderUpdate?.(); // solo refresca mesas, no cierra
+      onOrderUpdate?.();
     }
   }
 
@@ -60,11 +60,17 @@ export default function OrderPanel({ table, onClose, onOrderUpdate, onOrderClose
     onOrderUpdate?.();
   }
 
-  async function closeOrder(status) {
+  // ← NUEVO: envía a caja en lugar de cobrar directo
+  async function sendToCash() {
     if (!order) return;
-    await api.patch(`/orders/${order.id}/status`, { status });
-    setOrder(null);
-    onOrderClosed?.(); // cierra el panel y refresca mesas
+    await api.patch(`/orders/${order.id}/send-to-cash`, {});
+    onOrderClosed?.();
+  }
+
+  async function cancelOrder() {
+    if (!order) return;
+    await api.patch(`/orders/${order.id}/status`, { status: 'cancelled' });
+    onOrderClosed?.();
   }
 
   const filteredProducts = activeCategory === 'all'
@@ -194,9 +200,7 @@ export default function OrderPanel({ table, onClose, onOrderUpdate, onOrderClose
                         <button
                           onClick={() => removeItem(item.id)}
                           className="text-red-400 hover:text-red-300 text-lg leading-none"
-                        >
-                          ×
-                        </button>
+                        >×</button>
                       </div>
                     </div>
                   ))
@@ -212,14 +216,17 @@ export default function OrderPanel({ table, onClose, onOrderUpdate, onOrderClose
                       {formatPrice(parseFloat(order.total) || 0)}
                     </span>
                   </div>
+
+                  {/* ← NUEVO: Enviar a Caja en lugar de Cobrar directo */}
                   <button
-                    onClick={() => closeOrder('paid')}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-colors"
+                    onClick={sendToCash}
+                    disabled={!order.OrderItems?.length}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors"
                   >
-                    💳 Cobrar
+                    🧾 Enviar a Caja
                   </button>
                   <button
-                    onClick={() => closeOrder('cancelled')}
+                    onClick={cancelOrder}
                     className="w-full bg-red-500/20 hover:bg-red-500/40 text-red-400 font-medium py-2 rounded-xl transition-colors text-sm"
                   >
                     Cancelar comanda

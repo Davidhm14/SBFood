@@ -7,6 +7,7 @@ const authRoutes  = require('./routes/auth');
 const tableRoutes = require('./routes/tables');
 const orderRoutes = require('./routes/orders');
 const productRoutes = require('./routes/products');
+const cashRoutes = require('./routes/cash');
 
 
 
@@ -14,7 +15,11 @@ const productRoutes = require('./routes/products');
 const app = express();
 
 // ─── Middlewares PRIMERO ─────────────────────────────────────
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 // ─── Rutas ──────────────────────────────────────────────────
@@ -22,6 +27,8 @@ app.use('/api/auth',   authRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/cash', cashRoutes);
+
 
 // ─── Health & Test ───────────────────────────────────────────
 app.get('/health', (req, res) => {
@@ -57,6 +64,10 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('✅ PostgreSQL conectado');
+
+    await sequelize.sync({ alter: true });
+    console.log('✅ Modelos sincronizados');
+    
     app.listen(PORT, () => {
       console.log(`🚀 SB Food API en http://localhost:${PORT}`);
       console.log(`🧪 Prueba: http://localhost:${PORT}/db-test`);
