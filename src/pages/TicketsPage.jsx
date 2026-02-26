@@ -15,6 +15,7 @@ export default function TicketsPage() {
   const [products, setProducts]             = useState([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [loading, setLoading]               = useState(true);
+  const [cashAmount, setCashAmount] = useState('');
 
   useEffect(() => { fetchData(); }, []);
 
@@ -192,36 +193,73 @@ export default function TicketsPage() {
             </div>
 
             {/* Fila 3 — Footer: SIEMPRE visible, nunca se mueve */}
+           
             <div className="border-t border-slate-700 pt-4 space-y-4">
-              <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center">
                 <span className="text-slate-300 font-semibold text-lg">Total</span>
                 <span className="text-white text-3xl font-bold">{fmt(selectedOrder.total)}</span>
-              </div>
-              <div>
-                <p className="text-slate-400 text-sm mb-2">Medio de pago</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {PAYMENT_METHODS.map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setPaymentMethod(m.id)}
-                      className={`py-3 rounded-xl text-sm font-semibold transition-colors ${
-                        paymentMethod === m.id
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button
-                onClick={handleCheckout}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-xl transition-colors text-lg"
-              >
-                ✅ Cobrar {fmt(selectedOrder.total)}
-              </button>
             </div>
+
+            {/* Medio de pago */}
+            <div>
+                <p className="text-slate-400 text-sm mb-2">Medio de pago</p>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                {PAYMENT_METHODS.map(m => (
+                    <button
+                    key={m.id}
+                    onClick={() => setPaymentMethod(m.id)}
+                    className={`py-3 rounded-xl text-sm font-semibold transition-colors ${
+                        paymentMethod === m.id
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                    }`}
+                    >
+                    {m.label}
+                    </button>
+                ))}
+                </div>
+
+                {/* Calculadora de vuelto — SOLO para EFECTIVO */}
+                {paymentMethod === 'cash' && (
+                <div className="space-y-3 mb-4 p-4 bg-slate-700/50 rounded-xl border border-slate-600">
+                    <div className="flex gap-2">
+                    <input
+                        type="number"
+                        placeholder="Paga con"
+                        value={cashAmount || ''}
+                        onChange={(e) => setCashAmount(e.target.value)}
+                        className="flex-1 bg-slate-600 border border-slate-500 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg"
+                    />
+                    <span className="text-white text-lg font-semibold self-center">$</span>
+                    </div>
+                    {cashAmount && (
+                    <div className="text-center">
+                        <p className="text-emerald-400 text-xl font-bold mb-1">
+                        Vuelto: {fmt(cashAmount - selectedOrder.total)}
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                        Recibirás <span className="font-semibold">{fmt(cashAmount)}</span>
+                        </p>
+                    </div>
+                    )}
+                </div>
+                )}
+            </div>
+
+            <button
+                onClick={handleCheckout}
+                disabled={paymentMethod === 'cash' && (!cashAmount || parseFloat(cashAmount) < parseFloat(selectedOrder.total))}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors text-lg flex items-center justify-center gap-2"
+            >
+                ✅ Cobrar {fmt(selectedOrder.total)}
+                {paymentMethod === 'cash' && cashAmount && (
+                <span className="text-sm bg-emerald-600/50 px-2 py-1 rounded-full">
+                    Vuelto {fmt(cashAmount - selectedOrder.total)}
+                </span>
+                )}
+            </button>
+            </div>
+                
 
           </div>
         )}
