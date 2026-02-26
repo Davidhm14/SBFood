@@ -8,6 +8,7 @@ const tableRoutes = require('./routes/tables');
 const orderRoutes = require('./routes/orders');
 const productRoutes = require('./routes/products');
 const cashRoutes = require('./routes/cash');
+const categoryRoutes = require('./routes/category');
 
 
 
@@ -28,6 +29,8 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cash', cashRoutes);
+app.use('/api/categories', categoryRoutes);
+
 
 
 // ─── Health & Test ───────────────────────────────────────────

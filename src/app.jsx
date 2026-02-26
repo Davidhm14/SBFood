@@ -5,21 +5,26 @@ import Login       from './pages/Login';
 import Tables      from './pages/tables';
 import OrderPanel  from './pages/OrderPanel';
 import CashPage    from './pages/CashPage';
-import TicketsPage from './pages/TicketsPage';  // ← nuevo
+import TicketsPage from './pages/TicketsPage';
+import ProductsPage from './pages/ProductsPage';
 
+
+// Tabs según rol
 const ADMIN_TABS = [
-  { id: 'tables',  label: '🪑 Mesas'   },
-  { id: 'tickets', label: '🧾 Tickets' },
-  { id: 'cash',    label: '💰 Caja'    },
+  { id: 'tables',   label: '🪑 Mesas' },
+  { id: 'tickets',  label: '🧾 Tickets' },
+  { id: 'cash',     label: '💰 Caja' },
+  { id: 'products', label: '📦 Productos' }, // ← nuevo tab
 ];
 
 const WAITER_TABS = [
   { id: 'tables', label: '🪑 Mesas' },
 ];
 
+
 function Dashboard() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab]         = useState('tables');
+  const [activeTab, setActiveTab] = useState('tables');
   const [selectedTable, setSelectedTable] = useState(null);
   const [refreshTables, setRefreshTables] = useState(0);
 
@@ -31,11 +36,13 @@ function Dashboard() {
       {/* Navbar */}
       <nav className="bg-slate-800 border-b border-slate-700 px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
+          {/* Logo y título */}
           <div className="flex items-center gap-3">
             <span className="text-2xl">🍽️</span>
             <span className="text-xl font-bold text-orange-500">SB Food</span>
           </div>
 
+          {/* Tabs */}
           <div className="flex gap-1">
             {tabs.map(tab => (
               <button
@@ -53,6 +60,7 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* Usuario + Logout */}
         <div className="flex items-center gap-4">
           <span className="text-slate-400 text-sm">
             👤 {user?.name}
@@ -69,7 +77,7 @@ function Dashboard() {
         </div>
       </nav>
 
-      {/* Contenido */}
+      {/* Contenido principal */}
       <main className="p-8 max-w-7xl mx-auto">
         {activeTab === 'tables' && (
           <>
@@ -91,9 +99,16 @@ function Dashboard() {
             <CashPage />
           </>
         )}
+
+        {activeTab === 'products' && (
+          <>
+            <h2 className="text-2xl font-bold text-white mb-6">📦 Productos y categorías</h2>
+            <ProductsPage />
+          </>
+        )}
       </main>
 
-      {/* Panel de comanda — solo visible en tab mesas */}
+      {/* Panel de comanda (solo mesas) */}
       {selectedTable && activeTab === 'tables' && (
         <OrderPanel
           table={selectedTable}
@@ -108,6 +123,7 @@ function Dashboard() {
     </div>
   );
 }
+
 
 function AppContent() {
   const { isAuth } = useAuth();
@@ -128,16 +144,19 @@ function AppContent() {
     verify();
   }, []);
 
-  if (checking) return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <p className="text-slate-400 text-lg">Verificando licencia...</p>
-    </div>
-  );
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <p className="text-slate-400 text-lg">Verificando licencia...</p>
+      </div>
+    );
+  }
 
   if (!licensed) return <Activation onActivated={() => setLicensed(true)} />;
   if (!isAuth)   return <Login onLogin={() => {}} />;
   return <Dashboard />;
 }
+
 
 export default function App() {
   return (

@@ -7,5 +7,12 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {  // ← AGREGAR ESTO
+      '/api': {
+        target: 'http://localhost:4000',  // Tu backend
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 })
