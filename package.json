@@ -5,12 +5,15 @@
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
-    "dev:electron": "concurrently \"npx vite\" \"wait-on http://localhost:5173 && npx electron .\"",
+    "dev:server": "node server/index.js",
+    "dev:electron": "concurrently \"node server/index.js\" \"npx vite\" \"wait-on http://localhost:4000/health && wait-on http://localhost:5173 && electron .\"",
     "build": "vite build",
+    "build:electron": "npm run build && electron-builder",
     "preview": "vite preview",
     "make": "npm run build && electron-builder --win"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

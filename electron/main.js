@@ -24,10 +24,14 @@ ipcMain.handle('license:activate', (_, serialInput) => {
 
 // ─── Iniciar API Express ─────────────────────────────────────
 function startApi() {
-  apiProcess = spawn('node', ['server/index.js'], {
-    cwd: path.join(__dirname, '..'),
-    stdio: 'inherit',
-  });
+  // ✅ FIX: Solo spawnea en PRODUCCIÓN
+  // En desarrollo, el backend lo inicia package.json (node server/index.js)
+  if (app.isPackaged) {
+    apiProcess = spawn('node', ['server/index.js'], {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'inherit',
+    });
+  }
 }
 
 // ─── Crear ventana principal ─────────────────────────────────
@@ -53,8 +57,8 @@ function createWindow() {
 
 // ─── App lifecycle ───────────────────────────────────────────
 app.whenReady().then(() => {
-  trial.init();   // ← inicializa trial en primera instalación
-  startApi();
+  trial.init();
+  startApi();     // ← Solo actúa en producción ahora
   createWindow();
 });
 

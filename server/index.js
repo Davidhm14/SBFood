@@ -3,41 +3,39 @@ const cors    = require('cors');
 require('dotenv').config();
 
 const { sequelize, User, Table, Category, Product } = require('./models');
-const authRoutes  = require('./routes/auth');
-const tableRoutes = require('./routes/tables');
-const orderRoutes = require('./routes/orders');
-const productRoutes = require('./routes/products');
-const cashRoutes = require('./routes/cash');
+const authRoutes     = require('./routes/auth');
+const tableRoutes    = require('./routes/tables');
+const orderRoutes    = require('./routes/orders');
+const productRoutes  = require('./routes/products');
+const cashRoutes     = require('./routes/cash');
 const categoryRoutes = require('./routes/category');
-
-
-
+const reportsRoutes  = require('./routes/reports');
 
 const app = express();
 
-// ─── Middlewares PRIMERO ─────────────────────────────────────
+// ─── Middlewares ─────────────────────────────────────────────
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 
-// ─── Rutas ──────────────────────────────────────────────────
-app.use('/api/auth',   authRoutes);
-app.use('/api/tables', tableRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cash', cashRoutes);
-app.use('/api/categories', categoryRoutes);
-
-
-
-// ─── Health & Test ───────────────────────────────────────────
+// ─── Health PRIMERO (wait-on lo necesita) ────────────────────
 app.get('/health', (req, res) => {
   res.json({ ok: true, message: 'SB Food API funcionando' });
 });
 
+// ─── Rutas ───────────────────────────────────────────────────
+app.use('/api/auth',       authRoutes);
+app.use('/api/tables',     tableRoutes);
+app.use('/api/orders',     orderRoutes);
+app.use('/api/products',   productRoutes);
+app.use('/api/cash',       cashRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/reports',    reportsRoutes);
+
+// ─── DB Test ─────────────────────────────────────────────────
 app.get('/db-test', async (req, res) => {
   try {
     await sequelize.authenticate();
@@ -60,7 +58,7 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
-// ─── Iniciar servidor ────────────────────────────────────────
+// ─── Iniciar servidor ─────────────────────────────────────────
 const PORT = process.env.API_PORT || 4000;
 
 async function start() {
@@ -70,7 +68,7 @@ async function start() {
 
     await sequelize.sync({ alter: true });
     console.log('✅ Modelos sincronizados');
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 SB Food API en http://localhost:${PORT}`);
       console.log(`🧪 Prueba: http://localhost:${PORT}/db-test`);

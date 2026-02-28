@@ -3,16 +3,22 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: './', // Para Electron
+  base: './',
   server: {
     port: 5173,
     host: true,
-    proxy: {  // ← AGREGAR ESTO
+    proxy: {
       '/api': {
-        target: 'http://localhost:4000',  // Tu backend
+        target: 'http://localhost:4000',
         changeOrigin: true,
-        secure: false,
-      },
-    },
+        secure: false
+      }
+    }
   },
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      external: ['electron']
+    }
+  }
 })

@@ -1,30 +1,30 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Activation  from './pages/Activation';
-import Login       from './pages/Login';
-import Tables      from './pages/tables';
-import OrderPanel  from './pages/OrderPanel';
-import CashPage    from './pages/CashPage';
-import TicketsPage from './pages/TicketsPage';
+import Activation   from './pages/Activation';
+import Login        from './pages/Login';
+import Tables       from './pages/tables';
+import OrderPanel   from './pages/OrderPanel';
+import CashPage     from './pages/CashPage';
+import TicketsPage  from './pages/TicketsPage';
 import ProductsPage from './pages/ProductsPage';
-
+import ReportsPage  from './pages/ReportsPage';
 
 // Tabs según rol
 const ADMIN_TABS = [
-  { id: 'tables',   label: '🪑 Mesas' },
-  { id: 'tickets',  label: '🧾 Tickets' },
-  { id: 'cash',     label: '💰 Caja' },
-  { id: 'products', label: '📦 Productos' }, // ← nuevo tab
+  { id: 'tables',   label: '🪑 Mesas'      },
+  { id: 'tickets',  label: '🧾 Tickets'    },
+  { id: 'cash',     label: '💰 Caja'       },
+  { id: 'products', label: '📦 Productos'  },
+  { id: 'reports',  label: '📊 Reportes'   },
 ];
 
 const WAITER_TABS = [
   { id: 'tables', label: '🪑 Mesas' },
 ];
 
-
 function Dashboard() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('tables');
+  const [activeTab, setActiveTab]       = useState('tables'); // ← SIEMPRE inicia en Mesas
   const [selectedTable, setSelectedTable] = useState(null);
   const [refreshTables, setRefreshTables] = useState(0);
 
@@ -36,22 +36,23 @@ function Dashboard() {
       {/* Navbar */}
       <nav className="bg-slate-800 border-b border-slate-700 px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
-          {/* Logo y título */}
-          <div className="flex items-center gap-3">
+
+          {/* Logo */}
+          <div className="flex items-center gap-3 shrink-0">
             <span className="text-2xl">🍽️</span>
             <span className="text-xl font-bold text-orange-500">SB Food</span>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1">
+          {/* Tabs - scroll horizontal en móvil */}
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
                 }`}
               >
                 {tab.label}
@@ -61,7 +62,7 @@ function Dashboard() {
         </div>
 
         {/* Usuario + Logout */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           <span className="text-slate-400 text-sm">
             👤 {user?.name}
             <span className="ml-2 bg-orange-500/20 text-orange-400 text-xs px-2 py-0.5 rounded-full">
@@ -79,6 +80,7 @@ function Dashboard() {
 
       {/* Contenido principal */}
       <main className="p-8 max-w-7xl mx-auto">
+
         {activeTab === 'tables' && (
           <>
             <h2 className="text-2xl font-bold text-white mb-6">🪑 Mesas del restaurante</h2>
@@ -106,9 +108,17 @@ function Dashboard() {
             <ProductsPage />
           </>
         )}
+
+        {activeTab === 'reports' && (
+          <>
+            <h2 className="text-2xl font-bold text-white mb-6">📊 Reportes de ventas</h2>
+            <ReportsPage />
+          </>
+        )}
+
       </main>
 
-      {/* Panel de comanda (solo mesas) */}
+      {/* Panel de comanda (solo cuando hay mesa seleccionada en tab Mesas) */}
       {selectedTable && activeTab === 'tables' && (
         <OrderPanel
           table={selectedTable}
@@ -123,7 +133,6 @@ function Dashboard() {
     </div>
   );
 }
-
 
 function AppContent() {
   const { isAuth } = useAuth();
@@ -147,7 +156,10 @@ function AppContent() {
   if (checking) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <p className="text-slate-400 text-lg">Verificando licencia...</p>
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+          <p className="text-slate-400 text-lg">Verificando licencia...</p>
+        </div>
       </div>
     );
   }
@@ -156,7 +168,6 @@ function AppContent() {
   if (!isAuth)   return <Login onLogin={() => {}} />;
   return <Dashboard />;
 }
-
 
 export default function App() {
   return (
